@@ -13,11 +13,9 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-    origin: [
-        "https://secure-online-judge.vercel.app", 
-        /\.vercel\.app$/,
-        "http://localhost:5173"
-    ],
+    origin: function (origin, callback) {
+        callback(null, true);
+    },
     credentials: true
 }));
 
