@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Search, Trophy, User, Plus, LogOut, Code2 } from 'lucide-react';
+import { Search, Trophy, User, Plus, LogOut, Code2, Layers, CheckCircle, BarChart } from 'lucide-react';
 
 export default function Dashboard({ handleLogout }) {
     const [problems, setProblems] = useState([]);
@@ -35,101 +35,164 @@ export default function Dashboard({ handleLogout }) {
         problem.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    // Dynamic counts for metrics panels
+    const easyCount = problems.filter(p => p.difficulty === 'Easy').length;
+    const mediumCount = problems.filter(p => p.difficulty === 'Medium').length;
+    const hardCount = problems.filter(p => p.difficulty === 'Hard').length;
+
     return (
         <motion.div 
-            initial={{ opacity: 0, y: 15 }} 
+            initial={{ opacity: 0, y: 10 }} 
             animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.4 }}
-            style={{ minHeight: '100vh', backgroundColor: '#0d1117', color: '#c9d1d9', padding: '40px 20px', fontFamily: 'sans-serif' }}
+            className="min-h-screen bg-[#09090b] text-zinc-100 font-sans antialiased"
         >
-            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-                
-                {/* 🌟 NEW: Premium Header with Lucide Icons */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap: 'wrap', gap: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ background: 'linear-gradient(135deg, #2ea043, #238636)', padding: '10px', borderRadius: '8px', display: 'flex' }}>
-                            <Code2 size={28} color="white" />
+            {/* Premium Sticky Navigation Bar */}
+            <header className="sticky top-0 z-40 w-full border-b border-zinc-800/80 bg-[#09090b]/80 backdrop-blur-md">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
+                        <div className="bg-violet-500/10 p-2 rounded-xl border border-violet-500/20">
+                            <Code2 className="w-5 h-5 text-violet-400" />
                         </div>
-                        <h1 style={{ margin: 0, color: '#fff', fontSize: '32px', fontWeight: '800', letterSpacing: '-0.5px' }}>Problemset</h1>
+                        <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent">
+                            AlgoJudge
+                        </span>
                     </div>
-                    
-                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                        <button onClick={() => navigate('/leaderboard')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', backgroundColor: '#161b22', color: '#e3b341', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s' }}>
-                            <Trophy size={18} /> Leaderboard
+
+                    <nav className="flex items-center gap-2">
+                        <button 
+                            onClick={() => navigate('/add-problem')}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-zinc-800 bg-[#0c0c0e] hover:bg-zinc-800/50 text-zinc-300 transition-all"
+                        >
+                            <Plus className="w-4 h-4 text-violet-400" />
+                            <span>Create</span>
                         </button>
-                        <button onClick={() => navigate('/profile')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', backgroundColor: '#161b22', color: '#a371f7', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s' }}>
-                            <User size={18} /> My Profile
+                        <button 
+                            onClick={() => navigate('/leaderboard')}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-zinc-800 bg-[#0c0c0e] hover:bg-zinc-800/50 text-zinc-300 transition-all"
+                        >
+                            <Trophy className="w-4 h-4 text-amber-400" />
+                            <span>Leaderboard</span>
                         </button>
-                        <button onClick={() => navigate('/add-problem')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', backgroundColor: '#238636', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s' }}>
-                            <Plus size={18} /> Create Problem
+                        <button 
+                            onClick={() => navigate('/profile')}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-zinc-800 bg-[#0c0c0e] hover:bg-zinc-800/50 text-zinc-300 transition-all"
+                        >
+                            <User className="w-4 h-4 text-emerald-400" />
+                            <span>Profile</span>
                         </button>
-                        <button onClick={logout} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', backgroundColor: 'transparent', color: '#f85149', border: '1px solid #f85149', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s' }}>
-                            <LogOut size={18} /> Logout
+                        <div className="w-px h-5 bg-zinc-800 mx-1" />
+                        <button 
+                            onClick={logout}
+                            className="p-2 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/5 transition-all"
+                            title="Sign Out"
+                        >
+                            <LogOut className="w-4 h-4" />
                         </button>
+                    </nav>
+                </div>
+            </header>
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                {/* Dashboard Meta Banner */}
+                <div className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                    <div>
+                        <h2 className="text-3xl font-bold tracking-tight text-zinc-100">Problem Repository</h2>
+                        <p className="text-zinc-500 mt-1 text-sm">Review, debug, and clear automated hidden verification frameworks.</p>
+                    </div>
+
+                    {/* Clean Utility Search Container */}
+                    <div className="relative w-full md:w-80">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                        <input 
+                            type="text"
+                            placeholder="Search code problems..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-[#0c0c0e] border border-zinc-800/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/40 transition-all"
+                        />
                     </div>
                 </div>
 
-                {/* 🌟 NEW: Sleek Search Bar */}
-                <div style={{ position: 'relative', marginBottom: '30px' }}>
-                    <Search size={20} color="#8b949e" style={{ position: 'absolute', left: '16px', top: '16px' }} />
-                    <input 
-                        type="text" 
-                        placeholder="Search for algorithmic challenges..." 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ width: '100%', padding: '16px 16px 16px 48px', borderRadius: '8px', border: '1px solid #30363d', backgroundColor: '#0d1117', color: '#fff', fontSize: '16px', outline: 'none', boxSizing: 'border-box', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                    />
+                {/* Dashboard Metrics Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div className="bg-[#0c0c0e] border border-zinc-800/60 p-5 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Systems</p>
+                            <h3 className="text-2xl font-bold mt-1 text-zinc-200">{problems.length}</h3>
+                        </div>
+                        <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/10 text-violet-400"><Layers className="w-5 h-5" /></div>
+                    </div>
+                    <div className="bg-[#0c0c0e] border border-zinc-800/60 p-5 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Easy Core</p>
+                            <h3 className="text-2xl font-bold mt-1 text-emerald-400">{easyCount}</h3>
+                        </div>
+                        <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-400"><CheckCircle className="w-5 h-5" /></div>
+                    </div>
+                    <div className="bg-[#0c0c0e] border border-zinc-800/60 p-5 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Medium Tier</p>
+                            <h3 className="text-2xl font-bold mt-1 text-amber-400">{mediumCount}</h3>
+                        </div>
+                        <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 text-amber-400"><BarChart className="w-5 h-5" /></div>
+                    </div>
+                    <div className="bg-[#0c0c0e] border border-zinc-800/60 p-5 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Hard Protocol</p>
+                            <h3 className="text-2xl font-bold mt-1 text-rose-400">{hardCount}</h3>
+                        </div>
+                        <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10 text-rose-400"><Trophy className="w-5 h-5" /></div>
+                    </div>
                 </div>
-                
-                {/* 🌟 NEW: LeetCode-Style Data Table */}
+
+                {/* Primary Data Table */}
                 {loading ? (
-                    <div style={{ textAlign: 'center', color: '#8b949e', marginTop: '50px' }}>Fetching challenges...</div>
+                    <div className="w-full bg-[#0c0c0e] border border-zinc-800/60 rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-3">
+                        <svg className="animate-spin h-6 w-6 text-violet-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p className="text-zinc-500 text-sm">Syncing secure data tables...</p>
+                    </div>
                 ) : (
-                    <div style={{ backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '12px', overflow: 'hidden' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <div className="w-full bg-[#0c0c0e] border border-zinc-800/60 rounded-2xl overflow-hidden shadow-lg">
+                        <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr style={{ backgroundColor: '#0d1117', borderBottom: '1px solid #30363d', color: '#8b949e', fontSize: '14px', textTransform: 'uppercase' }}>
-                                    <th style={{ padding: '20px', width: '60%', textAlign: 'left' }}>Title</th>
-                                    <th style={{ padding: '20px', width: '20%', textAlign: 'center' }}>Difficulty</th>
-                                    <th style={{ padding: '20px', width: '20%', textAlign: 'right' }}>Action</th>
+                                <tr className="border-b border-zinc-800 bg-zinc-900/20 text-zinc-400 text-xs font-semibold uppercase tracking-wider">
+                                    <th className="px-6 py-4">Problem Set Title</th>
+                                    <th className="px-6 py-4">Complexity Matrix</th>
+                                    <th className="px-6 py-4 text-right">Execution</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-zinc-800/60 text-sm">
                                 {filteredProblems.length === 0 ? (
                                     <tr>
-                                        <td colSpan="3" style={{ textAlign: 'center', padding: '40px', color: '#8b949e' }}>No challenges found matching "{searchQuery}"</td>
+                                        <td colSpan="3" className="px-6 py-12 text-center text-zinc-500">
+                                            No matching algorithm files located.
+                                        </td>
                                     </tr>
                                 ) : (
                                     filteredProblems.map((problem) => (
-                                        <tr key={problem._id} style={{ borderBottom: '1px solid #21262d', transition: 'background 0.2s', cursor: 'default' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1c2128'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                                            <td style={{ padding: '20px', textAlign: 'left' }}>
-                                                <div style={{ color: '#fff', fontSize: '16px', fontWeight: '600' }}>
-                                                    {problem.title}
-                                                </div>
-                                                {/* 🌟 NEW: Render Tags (if they exist in the DB) */}
-                                                {problem.tags && problem.tags.length > 0 && (
-                                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
-                                                        {problem.tags.map((tag, idx) => (
-                                                            <span key={idx} style={{ backgroundColor: '#2d333b', color: '#adbac7', padding: '2px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '600', border: '1px solid #444c56' }}>
-                                                                {tag}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                )}
+                                        <tr 
+                                            key={problem._id}
+                                            className="group hover:bg-zinc-900/30 transition-all duration-150"
+                                        >
+                                            <td className="px-6 py-4 font-medium text-zinc-200 group-hover:text-white transition-colors">
+                                                {problem.title}
                                             </td>
-                                            <td style={{ padding: '20px', textAlign: 'center' }}>
-                                                <span style={{ 
-                                                    color: problem.difficulty === 'Easy' ? '#3fb950' : problem.difficulty === 'Medium' ? '#d29922' : '#f85149',
-                                                    backgroundColor: problem.difficulty === 'Easy' ? 'rgba(63, 185, 80, 0.1)' : problem.difficulty === 'Medium' ? 'rgba(210, 153, 34, 0.1)' : 'rgba(248, 81, 73, 0.1)',
-                                                    padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold'
-                                                }}>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                                                    problem.difficulty === 'Easy' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' :
+                                                    problem.difficulty === 'Medium' ? 'bg-amber-500/5 border-amber-500/20 text-amber-400' :
+                                                    'bg-rose-500/5 border-rose-500/20 text-rose-400'
+                                                }`}>
                                                     {problem.difficulty}
                                                 </span>
                                             </td>
-                                            <td style={{ padding: '20px', textAlign: 'right' }}>
+                                            <td className="px-6 py-4 text-right">
                                                 <button 
                                                     onClick={() => navigate(`/problem/${problem._id}`)}
-                                                    style={{ padding: '8px 20px', backgroundColor: '#238636', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', transition: '0.2s' }}
+                                                    className="inline-flex items-center justify-center px-4 py-1.5 rounded-lg text-xs font-semibold bg-zinc-100 hover:bg-white text-zinc-900 transition-all shadow-sm"
                                                 >
                                                     Solve
                                                 </button>
@@ -141,7 +204,7 @@ export default function Dashboard({ handleLogout }) {
                         </table>
                     </div>
                 )}
-            </div>
+            </main>
         </motion.div>
     );
 }

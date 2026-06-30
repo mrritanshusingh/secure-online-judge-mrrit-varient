@@ -1,20 +1,31 @@
-# Node Modules
+# ========================
+# 1. Dependency Directories
+# ========================
 node_modules/
-frontend/node_modules/
-backend/node_modules/
 
-# Environment Variables (Keep secrets safe!)
+# ========================
+# 2. Environment & Secrets (CRITICAL)
+# ========================
 .env
-.env.local
-backend/.env
-frontend/.env
+.env.*
+*.pem
+keys/
 
-# Temporary Execution Folders
+# ========================
+# 3. Build & OS Files
+# ========================
+frontend/dist/
+.DS_Store
+*.log
+npm-debug.log*
+
+# ========================
+# 4. Local Execution & Temp Files
+# ========================
 backend/codes/
 backend/inputs/
 backend/outputs/
 backend/a.out
-
-# Build and OS files
-frontend/dist/
-.DS_Store
+*.exe
+*.class
+*.out

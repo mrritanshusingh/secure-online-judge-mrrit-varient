@@ -4,32 +4,34 @@ import axios from 'axios';
 import { ActivityCalendar } from 'react-activity-calendar';
 import { Tooltip as ReactTooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
+import { ChevronLeft, Target, Flame, Activity, CheckCircle2, XCircle, Code2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const CircularProgress = ({ label, solved, total, color }) => {
+const CircularProgress = ({ label, solved, total, colorClass, strokeClass }) => {
     const radius = 40;
     const circumference = 2 * Math.PI * radius;
     const safeTotal = total > 0 ? total : 1; 
     const strokeDashoffset = circumference - (solved / safeTotal) * circumference;
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <svg width="120" height="120" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r={radius} stroke="#333" strokeWidth="8" fill="none" />
-                <circle 
-                    cx="50" cy="50" r={radius} stroke={color} strokeWidth="8" fill="none" 
-                    strokeDasharray={circumference} 
-                    strokeDashoffset={strokeDashoffset} 
-                    strokeLinecap="round" 
-                    transform="rotate(-90 50 50)" 
-                    style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
-                />
-                <text x="50%" y="45%" textAnchor="middle" fill="#fff" fontSize="14px" fontWeight="bold">
-                    {solved}/{total}
-                </text>
-                <text x="50%" y="65%" textAnchor="middle" fill="#aaa" fontSize="12px">
-                    {label}
-                </text>
-            </svg>
+        <div className="flex flex-col items-center">
+            <div className="relative flex items-center justify-center">
+                <svg width="120" height="120" viewBox="0 0 100 100" className="transform -rotate-90">
+                    <circle cx="50" cy="50" r={radius} className="stroke-zinc-800" strokeWidth="8" fill="none" />
+                    <circle 
+                        cx="50" cy="50" r={radius} 
+                        className={`${strokeClass} transition-all duration-1000 ease-out`}
+                        strokeWidth="8" fill="none" 
+                        strokeDasharray={circumference} 
+                        strokeDashoffset={strokeDashoffset} 
+                        strokeLinecap="round" 
+                    />
+                </svg>
+                <div className="absolute flex flex-col items-center justify-center">
+                    <span className="text-lg font-bold text-zinc-100">{solved}<span className="text-zinc-500 text-sm">/{total}</span></span>
+                </div>
+            </div>
+            <span className={`mt-3 text-xs font-bold uppercase tracking-wider ${colorClass}`}>{label}</span>
         </div>
     );
 };
@@ -44,7 +46,7 @@ export default function Profile() {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    navigate('/login');
+                    navigate('/');
                     return;
                 }
                 const res = await axios.get('/api/submit/metrics', {
@@ -60,45 +62,89 @@ export default function Profile() {
         fetchMetrics();
     }, [navigate]);
 
-    if (loading) return <div style={{ color: 'white', padding: '50px', textAlign: 'center' }}>Loading your stats...</div>;
-    if (!metrics) return <div style={{ color: '#ff5252', padding: '50px', textAlign: 'center' }}>Error loading stats.</div>;
+    if (loading) return (
+        <div className="min-h-screen bg-[#09090b] flex items-center justify-center gap-3">
+            <svg className="animate-spin h-6 w-6 text-violet-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-zinc-500 text-sm font-medium">Compiling developer telemetry...</p>
+        </div>
+    );
+    
+    if (!metrics) return <div className="min-h-screen bg-[#09090b] text-rose-400 flex items-center justify-center font-mono">Error loading telemetry data.</div>;
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#3b3b4f', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 20px', boxSizing: 'border-box', fontFamily: 'sans-serif' }}>
-            
-            <div style={{ backgroundColor: '#2a2a35', padding: '40px', borderRadius: '10px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', width: '100%', maxWidth: '1000px' }}>
+        <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }}
+            className="min-h-screen bg-[#09090b] text-zinc-200 font-sans p-4 sm:p-8"
+        >
+            <div className="max-w-6xl mx-auto space-y-8">
                 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                    <h1 style={{ color: '#fff', margin: 0, fontSize: '28px' }}>Developer Profile</h1>
-                    <button onClick={() => navigate('/')} style={{ background: '#444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
-                        Back to Dashboard
-                    </button>
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-zinc-800/80 pb-6">
+                    <div className="flex items-center gap-4">
+                        <button 
+                            onClick={() => navigate('/')}
+                            className="p-2 rounded-xl border border-zinc-800 bg-[#0c0c0e] text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-all"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <div>
+                            <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">Developer Profile</h1>
+                            <p className="text-zinc-500 text-sm mt-1">Performance analytics and submission telemetry</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '30px' }}>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     
-                    {/* LEFT COLUMN: Original Stats & Heatmap */}
-                    <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                    {/* LEFT COLUMN: Stats & Heatmap */}
+                    <div className="lg:col-span-2 space-y-8">
                         
-                        <div style={{ display: 'flex', justifyContent: 'space-around', backgroundColor: '#1e1e24', padding: '20px', borderRadius: '12px' }}>
-                            <CircularProgress label="Easy" solved={metrics.solved.easy} total={metrics.solved.totalEasy} color="#4caf50" />
-                            <CircularProgress label="Medium" solved={metrics.solved.medium} total={metrics.solved.totalMedium} color="#ff9800" />
-                            <CircularProgress label="Hard" solved={metrics.solved.hard} total={metrics.solved.totalHard} color="#f44336" />
+                        {/* Circular Progress Row */}
+                        <div className="bg-[#0c0c0e] border border-zinc-800/60 p-8 rounded-2xl flex justify-around items-center shadow-lg">
+                            <CircularProgress label="Easy" solved={metrics.solved.easy} total={metrics.solved.totalEasy} colorClass="text-emerald-400" strokeClass="stroke-emerald-500" />
+                            <CircularProgress label="Medium" solved={metrics.solved.medium} total={metrics.solved.totalMedium} colorClass="text-amber-400" strokeClass="stroke-amber-500" />
+                            <CircularProgress label="Hard" solved={metrics.solved.hard} total={metrics.solved.totalHard} colorClass="text-rose-400" strokeClass="stroke-rose-500" />
                         </div>
 
-                        {/* 📈 NEW: Tooltip-Enabled Heatmap */}
-                        <div style={{ backgroundColor: '#1e1e24', padding: '25px', borderRadius: '12px' }}>
-                            <h3 style={{ color: '#fff', marginTop: 0, marginBottom: '20px' }}>Submission Activity</h3>
+                        {/* Top Level Meta Stats */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="bg-emerald-500/[0.03] border border-emerald-500/20 p-6 rounded-2xl flex flex-col items-center justify-center text-center">
+                                <Target className="w-6 h-6 text-emerald-400 mb-3" />
+                                <div className="text-3xl font-bold text-emerald-400">{metrics.acceptanceRate}%</div>
+                                <div className="text-xs font-semibold text-emerald-500/70 mt-1 uppercase tracking-wider">Acceptance Rate</div>
+                            </div>
+                            <div className="bg-[#0c0c0e] border border-zinc-800/60 p-6 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+                                <Activity className="w-6 h-6 text-violet-400 mb-3" />
+                                <div className="text-3xl font-bold text-zinc-100">{metrics.submissions.total}</div>
+                                <div className="text-xs font-semibold text-zinc-500 mt-1 uppercase tracking-wider">Total Commits</div>
+                            </div>
+                            <div className="bg-[#0c0c0e] border border-zinc-800/60 p-6 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+                                <Flame className="w-6 h-6 text-amber-500 mb-3" />
+                                <div className="text-3xl font-bold text-zinc-100">{metrics.solved.easy + metrics.solved.medium + metrics.solved.hard}</div>
+                                <div className="text-xs font-semibold text-zinc-500 mt-1 uppercase tracking-wider">Systems Cleared</div>
+                            </div>
+                        </div>
+
+                        {/* Heatmap Area */}
+                        <div className="bg-[#0c0c0e] border border-zinc-800/60 p-8 rounded-2xl shadow-lg overflow-x-auto">
+                            <h3 className="text-sm font-bold text-zinc-100 mb-6 uppercase tracking-wider flex items-center gap-2">
+                                <Code2 className="w-4 h-4 text-violet-400" />
+                                Activity Heatmap
+                            </h3>
                             <ActivityCalendar 
                                 data={metrics.heatmapData} 
                                 blockSize={14}     
-                                blockMargin={4}
+                                blockMargin={5}
                                 colorScheme="dark"
                                 theme={{
-                                    dark: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
+                                    dark: ['#18181b', '#4c1d95', '#6d28d9', '#8b5cf6', '#a78bfa'], // Cool violet theme
                                 }}
                                 labels={{
-                                    totalCount: '{{count}} submissions in the last year',
+                                    totalCount: '{{count}} verification commits in the last year',
                                 }}
                                 renderBlock={(block, activity) => 
                                     React.cloneElement(block, {
@@ -109,48 +155,36 @@ export default function Profile() {
                             />
                             <ReactTooltip 
                                 id="heatmap-tooltip" 
-                                style={{ backgroundColor: '#2d333b', color: '#adbac7', borderRadius: '6px', padding: '6px 12px', fontSize: '13px', border: '1px solid #444c56', zIndex: 100 }} 
+                                className="!bg-[#0c0c0e] !text-zinc-300 !border !border-zinc-800 !rounded-lg !px-3 !py-2 !text-xs !shadow-xl"
                             />
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                            <div style={{ backgroundColor: '#28a745', padding: '20px', borderRadius: '8px', color: '#fff', gridColumn: 'span 2', textAlign: 'center' }}>
-                                <div style={{ fontSize: '16px', fontWeight: 'bold' }}>Acceptance Rate</div>
-                                <div style={{ fontSize: '32px', marginTop: '5px' }}>{metrics.acceptanceRate}%</div>
-                            </div>
-                            <div style={{ backgroundColor: '#d97706', padding: '15px', borderRadius: '8px', color: '#fff', textAlign: 'center' }}>
-                                <div style={{ fontSize: '12px', fontWeight: 'bold', opacity: 0.9 }}>Total Submissions</div>
-                                <div style={{ fontSize: '20px', marginTop: '5px' }}>{metrics.submissions.total}</div>
-                            </div>
-                            <div style={{ backgroundColor: '#4a148c', padding: '15px', borderRadius: '8px', color: '#fff', textAlign: 'center' }}>
-                                <div style={{ fontSize: '12px', fontWeight: 'bold', opacity: 0.9 }}>Total Solved</div>
-                                <div style={{ fontSize: '20px', marginTop: '5px' }}>{metrics.solved.easy + metrics.solved.medium + metrics.solved.hard}</div>
-                            </div>
                         </div>
 
                     </div>
 
                     {/* RIGHT COLUMN: Recent Submissions Feed */}
-                    <div style={{ flex: 1, backgroundColor: '#1e1e24', padding: '25px', borderRadius: '12px', maxHeight: '800px', overflowY: 'auto' }}>
-                        <h3 style={{ color: '#fff', marginTop: 0, borderBottom: '1px solid #333', paddingBottom: '15px' }}>Recent Activity</h3>
+                    <div className="bg-[#0c0c0e] border border-zinc-800/60 p-6 rounded-2xl shadow-lg flex flex-col h-[800px]">
+                        <h3 className="text-sm font-bold text-zinc-100 mb-6 uppercase tracking-wider border-b border-zinc-800 pb-4">Activity Log</h3>
                         
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px' }}>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
                             {metrics.recentSubmissions.length === 0 ? (
-                                <p style={{ color: '#888' }}>No recent submissions.</p>
+                                <p className="text-zinc-600 text-sm text-center mt-10 italic">No telemetry data recorded.</p>
                             ) : (
                                 metrics.recentSubmissions.map((sub) => (
-                                    <div key={sub.id} style={{ background: '#252526', padding: '15px', borderRadius: '8px', borderLeft: `4px solid ${sub.verdict === 'Accepted' ? '#2ea043' : '#f85149'}` }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                            <strong style={{ color: '#c9d1d9', fontSize: '14px' }}>{sub.problemTitle}</strong>
+                                    <div key={sub.id} className="bg-[#09090b] border border-zinc-800/60 p-4 rounded-xl flex flex-col gap-2 hover:border-zinc-700 transition-colors">
+                                        <div className="flex justify-between items-start">
+                                            <strong className="text-zinc-200 text-sm">{sub.problemTitle}</strong>
+                                            <span className="text-zinc-500 text-[10px] font-mono">{new Date(sub.timestamp).toLocaleDateString()}</span>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginTop: '8px' }}>
-                                            <span style={{ color: sub.verdict === 'Accepted' ? '#3fb950' : '#f85149', fontWeight: 'bold' }}>
-                                                {sub.verdict}
+                                        <div className="flex justify-between items-center mt-2">
+                                            <div className="flex items-center gap-1.5">
+                                                {sub.verdict === 'Accepted' ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <XCircle className="w-3.5 h-3.5 text-rose-500" />}
+                                                <span className={`text-xs font-bold ${sub.verdict === 'Accepted' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                    {sub.verdict}
+                                                </span>
+                                            </div>
+                                            <span className="bg-zinc-800/50 text-zinc-400 px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider border border-zinc-700/50">
+                                                {sub.language}
                                             </span>
-                                            <span style={{ color: '#8b949e' }}>{sub.language}</span>
-                                        </div>
-                                        <div style={{ color: '#666', fontSize: '11px', marginTop: '5px', textAlign: 'right' }}>
-                                            {new Date(sub.timestamp).toLocaleDateString()}
                                         </div>
                                     </div>
                                 ))
@@ -160,6 +194,6 @@ export default function Profile() {
 
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

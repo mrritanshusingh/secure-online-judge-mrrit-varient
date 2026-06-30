@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { Terminal } from 'lucide-react';
 
 export default function Auth({ setToken }) {
     const [isLogin, setIsLogin] = useState(true);
@@ -33,72 +34,97 @@ export default function Auth({ setToken }) {
     };
 
     return (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#121212', fontFamily: 'sans-serif' }}>
-            <div style={{ width: '100%', maxWidth: '420px', backgroundColor: '#1e1e1e', padding: '40px', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
-                
-                {/* Branding Header */}
-                <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                    <h1 style={{ color: '#ffffff', margin: '0 0 10px 0', fontSize: '28px' }}>🚀 AlgoJudge</h1>
-                    <p style={{ color: '#888', margin: 0 }}>Secure Code Execution Engine</p>
+        <div className="min-h-screen bg-[#09090b] flex flex-col items-center justify-center p-4 font-sans selection:bg-violet-500/30">
+            
+            {/* Branding Header */}
+            <div className="text-center mb-8 flex flex-col items-center">
+                <div className="bg-violet-500/10 p-3 rounded-2xl mb-4 border border-violet-500/20">
+                    <Terminal className="w-8 h-8 text-violet-500" />
                 </div>
+                <h1 className="text-3xl font-bold text-zinc-100 tracking-tight">AlgoJudge</h1>
+                <p className="text-zinc-500 mt-2 text-sm uppercase tracking-widest font-semibold">Secure Execution Engine</p>
+            </div>
 
-                {/* Login / Signup Tabs */}
-                <div style={{ display: 'flex', marginBottom: '25px', borderBottom: '2px solid #333' }}>
+            {/* Main Auth Card */}
+            <div className="w-full max-w-md bg-[#0c0c0e] border border-zinc-800/60 rounded-2xl p-8 shadow-[0_0_40px_rgba(139,92,246,0.05)]">
+                
+                {/* Tabs */}
+                <div className="flex mb-8 border-b border-zinc-800">
                     <button 
                         onClick={() => { setIsLogin(true); setMessage(''); }} 
-                        style={{ flex: 1, padding: '12px', background: 'transparent', border: 'none', color: isLogin ? '#4facfe' : '#888', borderBottom: isLogin ? '2px solid #4facfe' : 'none', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', transition: '0.3s' }}
+                        className={`flex-1 pb-4 text-sm font-medium transition-all ${isLogin ? 'text-violet-400 border-b-2 border-violet-500' : 'text-zinc-500 hover:text-zinc-300'}`}
                     >
-                        Login
+                        Sign In
                     </button>
                     <button 
                         onClick={() => { setIsLogin(false); setMessage(''); }} 
-                        style={{ flex: 1, padding: '12px', background: 'transparent', border: 'none', color: !isLogin ? '#4facfe' : '#888', borderBottom: !isLogin ? '2px solid #4facfe' : 'none', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', transition: '0.3s' }}
+                        className={`flex-1 pb-4 text-sm font-medium transition-all ${!isLogin ? 'text-violet-400 border-b-2 border-violet-500' : 'text-zinc-500 hover:text-zinc-300'}`}
                     >
-                        Sign Up
+                        Create Account
                     </button>
                 </div>
 
-                {/* Alert Message Box */}
+                {/* Alert Box */}
                 {message && (
-                    <div style={{ padding: '12px', marginBottom: '20px', borderRadius: '6px', backgroundColor: message.includes('successful') ? 'rgba(40, 167, 69, 0.15)' : 'rgba(220, 53, 69, 0.15)', color: message.includes('successful') ? '#4caf50' : '#ff5252', textAlign: 'center', fontSize: '14px', border: `1px solid ${message.includes('successful') ? '#4caf50' : '#ff5252'}` }}>
+                    <div className={`p-4 mb-6 rounded-lg text-sm border ${message.includes('successful') ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
                         {message}
                     </div>
                 )}
                 
                 {/* Auth Form */}
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     {!isLogin && (
-                        <input 
-                            type="text" 
-                            placeholder="Full Name" 
-                            value={name} 
-                            onChange={(e) => setName(e.target.value)} 
-                            required 
-                            style={{ padding: '14px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#252526', color: '#fff', fontSize: '15px', outline: 'none' }}
-                        />
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-zinc-400 ml-1">Full Name</label>
+                            <input 
+                                type="text" 
+                                value={name} 
+                                onChange={(e) => setName(e.target.value)} 
+                                required 
+                                className="w-full bg-[#09090b] border border-zinc-800 rounded-lg px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all"
+                                placeholder="John Doe"
+                            />
+                        </div>
                     )}
-                    <input 
-                        type="email" 
-                        placeholder="Email Address" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                        required 
-                        style={{ padding: '14px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#252526', color: '#fff', fontSize: '15px', outline: 'none' }}
-                    />
-                    <input 
-                        type="password" 
-                        placeholder="Password" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        required 
-                        style={{ padding: '14px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#252526', color: '#fff', fontSize: '15px', outline: 'none' }}
-                    />
+                    
+                    <div className="space-y-1">
+                        <label className="text-xs font-medium text-zinc-400 ml-1">Email Address</label>
+                        <input 
+                            type="email" 
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)} 
+                            required 
+                            className="w-full bg-[#09090b] border border-zinc-800 rounded-lg px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all"
+                            placeholder="name@example.com"
+                        />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-xs font-medium text-zinc-400 ml-1">Password</label>
+                        <input 
+                            type="password" 
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)} 
+                            required 
+                            className="w-full bg-[#09090b] border border-zinc-800 rounded-lg px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all"
+                            placeholder="••••••••"
+                        />
+                    </div>
+
                     <button 
                         type="submit" 
                         disabled={isLoading}
-                        style={{ padding: '14px', marginTop: '10px', borderRadius: '8px', border: 'none', background: 'linear-gradient(to right, #4facfe 0%, #00f2fe 100%)', color: '#fff', fontSize: '16px', fontWeight: 'bold', cursor: isLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1, transition: '0.3s' }}
+                        className="w-full mt-4 bg-zinc-100 hover:bg-white text-zinc-900 font-semibold py-3 rounded-lg text-sm transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                     >
-                        {isLoading ? 'Processing...' : (isLogin ? 'Secure Login' : 'Create Account')}
+                        {isLoading ? (
+                            <>
+                                <svg className="animate-spin h-4 w-4 text-zinc-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Authenticating...
+                            </>
+                        ) : (isLogin ? 'Sign In' : 'Create Account')}
                     </button>
                 </form>
             </div>
