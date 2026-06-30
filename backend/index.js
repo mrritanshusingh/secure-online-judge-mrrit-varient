@@ -12,7 +12,10 @@ const submitRoutes = require('./routes/submitRoutes');
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: ["https://secure-online-judge.vercel.app", "http://localhost:5173"],
+    credentials: true
+}));
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("✅ Secure MongoDB Atlas Connected"))
