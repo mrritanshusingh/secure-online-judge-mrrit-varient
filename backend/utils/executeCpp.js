@@ -21,8 +21,8 @@ const executeCpp = (filepath, inputPath) => {
         const command = containerInputPath 
             ? `docker run --rm --memory="512m" --network none -v "${backendDir}":/app gcc:latest bash -c "g++ -O0 -w ${containerCodePath} -o ${containerOutPath} && ${containerOutPath} < ${containerInputPath}"`
             : `docker run --rm --memory="512m" --network none -v "${backendDir}":/app gcc:latest bash -c "g++ -O0 -w ${containerCodePath} -o ${containerOutPath} && ${containerOutPath}"`;
-            
-        exec(command, { timeout: 10000 }, (error, stdout, stderr) => {
+
+        exec(command, { timeout: 20000 }, (error, stdout, stderr) => {
             if (error) {
                 if (error.killed) {
                     return reject("Time Limit Exceeded");
