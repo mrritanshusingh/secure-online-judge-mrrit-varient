@@ -14,11 +14,22 @@ const executeCpp = (filePath, inputPath) => {
 
         exec(command, { timeout: 20000 }, (error, stdout, stderr) => {
             if (error) {
+                const errMsg = error.message || "";
                 if (error.killed) {
                     return reject("Time Limit Exceeded");
                 }
-                return reject(error.message || stderr);
+                if (errMsg.includes("12 Killed") || errMsg.includes("CPU time")) {
+                    return reject("Time Limit Exceeded");
+                }
+                if (errMsg.includes("11 Killed") || errMsg.includes("137")) {
+                    return reject("Memory Limit Exceeded");
+                }
+                if (errMsg.includes("maxBuffer")) {
+                    return reject("Memory Limit Exceeded");
+                }
+                return reject(stderr ? stderr : "Runtime Error");
             }
+            
             if (stderr) {
                 return reject(stderr);
             }

@@ -9,16 +9,17 @@ const executePython = (filePath, inputPath) => {
         const inputFile = path.basename(inputPath);
 
         const command = `docker run --rm --memory="256m" --memory-swap="256m" --cpus="0.5" --pids-limit=50 --ulimit cpu=10 --network none -v "${codeDir}":/app/codes -v "${inputDir}":/app/inputs -w /app python:3.9-slim sh -c "python codes/${codeFile} < inputs/${inputFile}"`;
-        
-        exec(command, { timeout: 10000 }, (error, stdout, stderr) => {
-            if (error){
-                if (error.killed) {
-                    return reject("Time Limit Exceeded");
-                }
-                if (error.code === 137) {
-                    return reject("Memory Limit Exceeded");
-                }
-                return reject(error.message || stderr);
+
+        exec(command, { timeout: 20000 }, (error, stdout, stderr) => {
+            if (error) {
+                const errMsg = error.message || "";
+                
+                if (error.killed) return reject("Time Limit Exceeded");
+                if (errMsg.includes("12 Killed") || errMsg.includes("CPU time")) return reject("Time Limit Exceeded");
+                if (errMsg.includes("11 Killed") || errMsg.includes("137") || error.code === 137) return reject("Memory Limit Exceeded");
+                if (errMsg.includes("maxBuffer")) return reject("Memory Limit Exceeded");
+                
+                return reject(stderr ? stderr : "Runtime Error");
             }
             if (stderr) return reject(stderr);
             resolve(stdout);
