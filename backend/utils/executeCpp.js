@@ -1,42 +1,30 @@
 const { exec } = require('child_process');
-const fs = require('fs');
 const path = require('path');
 
-const outputPath = path.join(__dirname, '../outputs');
-if (!fs.existsSync(outputPath)) {
-    fs.mkdirSync(outputPath, { recursive: true });
-}
-
-const executeCpp = (filepath, inputPath) => {
-    const jobId = path.basename(filepath).split('.')[0];
-    
-    const backendDir = path.join(__dirname, '..'); 
-    
-    const containerCodePath = `/app/codes/${jobId}.cpp`;
-    const containerOutPath = `/app/outputs/${jobId}.out`;
-    const containerInputPath = inputPath ? `/app/inputs/${path.basename(inputPath)}` : null;
-
+const executeCpp = (filePath, inputPath) => {
     return new Promise((resolve, reject) => {
-        
-        const command = containerInputPath 
-            ? `docker run --rm --memory="512m" --network none -v "${backendDir}":/app gcc:latest bash -c "g++ -O0 -w ${containerCodePath} -o ${containerOutPath} && ${containerOutPath} < ${containerInputPath}"`
-            : `docker run --rm --memory="512m" --network none -v "${backendDir}":/app gcc:latest bash -c "g++ -O0 -w ${containerCodePath} -o ${containerOutPath} && ${containerOutPath}"`;
+        const codeDir = path.dirname(filePath);
+        const inputDir = inputPath ? path.dirname(inputPath) : null;
+        const codeFile = path.basename(filePath);
+        const inputFile = inputPath ? path.basename(inputPath) : null;
+
+        const command = inputPath 
+            ? `docker run --rm --memory="512m" --network none -v "${codeDir}":/app/codes -v "${inputDir}":/app/inputs -w /app gcc:latest bash -c "g++ -O0 -w codes/${codeFile} -o /app/a.out && /app/a.out < inputs/${inputFile}"`
+            : `docker run --rm --memory="512m" --network none -v "${codeDir}":/app/codes -w /app gcc:latest bash -c "g++ -O0 -w codes/${codeFile} -o /app/a.out && /app/a.out"`;
 
         exec(command, { timeout: 20000 }, (error, stdout, stderr) => {
             if (error) {
                 if (error.killed) {
                     return reject("Time Limit Exceeded");
                 }
-                reject({ error, stderr });
+                return reject(error.message || stderr);
             }
             if (stderr) {
-                reject(stderr);
+                return reject(stderr);
             }
             resolve(stdout);
         });
     });
 };
 
-module.exports = {
-    executeCpp
-};
+module.exports = { executeCpp };
