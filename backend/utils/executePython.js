@@ -8,8 +8,8 @@ const executePython = (filePath, inputPath) => {
         const codeFile = path.basename(filePath);
         const inputFile = path.basename(inputPath);
 
-        const command = `docker run --rm --memory="256m" --memory-swap="256m" --cpus="0.5" --network none -v "${codeDir}":/app/codes -v "${inputDir}":/app/inputs -w /app python:3.9-slim sh -c "python codes/${codeFile} < inputs/${inputFile}"`;
-
+        const command = `docker run --rm --memory="256m" --memory-swap="256m" --cpus="0.5" --pids-limit=50 --ulimit cpu=10 --network none -v "${codeDir}":/app/codes -v "${inputDir}":/app/inputs -w /app python:3.9-slim sh -c "python codes/${codeFile} < inputs/${inputFile}"`;
+        
         exec(command, { timeout: 10000 }, (error, stdout, stderr) => {
             if (error){
                 if (error.killed) {

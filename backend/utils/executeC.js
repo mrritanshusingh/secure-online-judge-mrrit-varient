@@ -8,8 +8,8 @@ const executeC = (filePath, inputPath) => {
         const codeFile = path.basename(filePath);
         const inputFile = path.basename(inputPath);
 
-        const command = `docker run --rm --memory="512m" --network none -v "${codeDir}":/app/codes -v "${inputDir}":/app/inputs -w /app gcc:latest sh -c "gcc codes/${codeFile} -o /app/a.out && /app/a.out < inputs/${inputFile}"`;
-
+        const command = `docker run --rm --memory="512m" --pids-limit=50 --ulimit cpu=10 --network none -v "${codeDir}":/app/codes -v "${inputDir}":/app/inputs -w /app gcc:latest sh -c "gcc codes/${codeFile} -o /app/a.out && /app/a.out < inputs/${inputFile}"`;
+        
         exec(command, { timeout: 10000 }, (error, stdout, stderr) => {
             if (error) {
                 if (error.killed) {

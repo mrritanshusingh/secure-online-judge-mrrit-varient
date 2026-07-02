@@ -9,8 +9,8 @@ const executeCpp = (filePath, inputPath) => {
         const inputFile = inputPath ? path.basename(inputPath) : null;
 
         const command = inputPath 
-            ? `docker run --rm --memory="512m" --network none -v "${codeDir}":/app/codes -v "${inputDir}":/app/inputs -w /app gcc:latest bash -c "g++ -O0 -w codes/${codeFile} -o /app/a.out && /app/a.out < inputs/${inputFile}"`
-            : `docker run --rm --memory="512m" --network none -v "${codeDir}":/app/codes -w /app gcc:latest bash -c "g++ -O0 -w codes/${codeFile} -o /app/a.out && /app/a.out"`;
+            ? `docker run --rm --memory="512m" --pids-limit=50 --ulimit cpu=10 --network none -v "${codeDir}":/app/codes -v "${inputDir}":/app/inputs -w /app gcc:latest bash -c "g++ -O0 -w codes/${codeFile} -o /app/a.out && /app/a.out < inputs/${inputFile}"`
+            : `docker run --rm --memory="512m" --pids-limit=50 --ulimit cpu=10 --network none -v "${codeDir}":/app/codes -w /app gcc:latest bash -c "g++ -O0 -w codes/${codeFile} -o /app/a.out && /app/a.out"`;
 
         exec(command, { timeout: 20000 }, (error, stdout, stderr) => {
             if (error) {

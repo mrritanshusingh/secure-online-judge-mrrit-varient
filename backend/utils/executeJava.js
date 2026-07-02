@@ -8,8 +8,8 @@ const executeJava = (filePath, inputPath) => {
         const codeFile = path.basename(filePath);
         const inputFile = path.basename(inputPath);
 
-        const command = `docker run --rm --memory="512m" --network none -v "${codeDir}":/app/codes -v "${inputDir}":/app/inputs -w /app eclipse-temurin:11-jdk sh -c "cp codes/${codeFile} Main.java && javac Main.java && java Main < inputs/${inputFile}"`;
-
+        const command = `docker run --rm --memory="512m" --pids-limit=50 --ulimit cpu=10 --network none -v "${codeDir}":/app/codes -v "${inputDir}":/app/inputs -w /app eclipse-temurin:11-jdk sh -c "cp codes/${codeFile} Main.java && javac Main.java && java Main < inputs/${inputFile}"`;
+        
         exec(command, { timeout: 10000 }, (error, stdout, stderr) => {
             if (error) {
                 if (error.killed) {
