@@ -1,130 +1,125 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { Terminal } from 'lucide-react';
+import { Terminal, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export default function Auth({ setToken }) {
+export default function Auth({ setToken, setRole }) {
     const [isLogin, setIsLogin] = useState(true);
+    const [authRole, setAuthRole] = useState('user');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
+
+    const validateEmail = (email) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    const validatePassword = (pass) => {
+        return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/.test(pass);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setMessage('');
+
+        if (!validateEmail(email)) {
+            return setMessage("Invalid email format.");
+        }
+        if (!isLogin && !validatePassword(password)) {
+            return setMessage("Password must be 8+ chars with a number and special character.");
+        }
+
         setIsLoading(true);
         try {
             const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-            const payload = isLogin ? { email, password } : { name, email, password };
+            const payload = isLogin ? { email, password } : { name, email, password, role: authRole };
             
             const res = await axios.post(endpoint, payload);
             
             if (isLogin) {
-                localStorage.setItem('token', res.data.token);
+                // UPDATED: Save securely to sessionStorage
+                sessionStorage.setItem('token', res.data.token);
+                const userRole = res.data.status === 'admin' ? 'admin' : 'user';
+                sessionStorage.setItem('role', userRole);
+                
                 setToken(res.data.token);
+                setRole(userRole);
+                navigate(userRole === 'admin' ? '/admin' : '/');
             } else {
-                setMessage("🎉 Signup successful! Please log in.");
+                setMessage("🎉 System override successful! Please log in.");
                 setIsLogin(true); 
                 setPassword('');
             }
         } catch (error) {
-            setMessage(error.response?.data?.message || "An error occurred");
+            if (error.code === 'ERR_NETWORK') {
+                setMessage("Network Error: Cannot reach the execution engine on port 8000.");
+            } else {
+                setMessage(error.response?.data?.message || "An unexpected error occurred");
+            }
         }
         setIsLoading(false);
     };
 
     return (
-        <div className="min-h-screen bg-[#09090b] flex flex-col items-center justify-center p-4 font-sans selection:bg-violet-500/30">
-            
-            {/* Branding Header */}
+        <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#020617] to-[#020617] flex flex-col items-center justify-center p-4 font-sans selection:bg-cyan-500/30">
             <div className="text-center mb-8 flex flex-col items-center">
-                <div className="bg-violet-500/10 p-3 rounded-2xl mb-4 border border-violet-500/20">
-                    <Terminal className="w-8 h-8 text-violet-500" />
+                <div className="bg-cyan-500/10 p-3 rounded-2xl mb-4 border border-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+                    <Terminal className="w-8 h-8 text-cyan-400" />
                 </div>
-                <h1 className="text-3xl font-bold text-zinc-100 tracking-tight">AlgoJudge</h1>
-                <p className="text-zinc-500 mt-2 text-sm uppercase tracking-widest font-semibold">Secure Execution Engine</p>
+                <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight">AlgoJudge</h1>
+                <p className="text-cyan-600/80 mt-2 text-sm uppercase tracking-widest font-bold">Secure Execution Engine</p>
             </div>
 
-            {/* Main Auth Card */}
-            <div className="w-full max-w-md bg-[#0c0c0e] border border-zinc-800/60 rounded-2xl p-8 shadow-[0_0_40px_rgba(139,92,246,0.05)]">
-                
-                {/* Tabs */}
-                <div className="flex mb-8 border-b border-zinc-800">
-                    <button 
-                        onClick={() => { setIsLogin(true); setMessage(''); }} 
-                        className={`flex-1 pb-4 text-sm font-medium transition-all ${isLogin ? 'text-violet-400 border-b-2 border-violet-500' : 'text-zinc-500 hover:text-zinc-300'}`}
-                    >
-                        Sign In
+            <div className="w-full max-w-md bg-[#0c0c0e] border border-slate-800 rounded-2xl p-8 shadow-2xl">
+                <div className="flex mb-8 border-b border-slate-800">
+                    <button onClick={() => { setIsLogin(true); setMessage(''); }} className={`flex-1 pb-4 text-sm font-bold transition-all ${isLogin ? 'text-cyan-400 border-b-2 border-cyan-500' : 'text-slate-500 hover:text-slate-300'}`}>
+                        Authenticate
                     </button>
-                    <button 
-                        onClick={() => { setIsLogin(false); setMessage(''); }} 
-                        className={`flex-1 pb-4 text-sm font-medium transition-all ${!isLogin ? 'text-violet-400 border-b-2 border-violet-500' : 'text-zinc-500 hover:text-zinc-300'}`}
-                    >
-                        Create Account
+                    <button onClick={() => { setIsLogin(false); setMessage(''); }} className={`flex-1 pb-4 text-sm font-bold transition-all ${!isLogin ? 'text-cyan-400 border-b-2 border-cyan-500' : 'text-slate-500 hover:text-slate-300'}`}>
+                        Initialize Account
                     </button>
                 </div>
 
-                {/* Alert Box */}
                 {message && (
-                    <div className={`p-4 mb-6 rounded-lg text-sm border ${message.includes('successful') ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                    <div className={`flex items-center gap-2 p-4 mb-6 rounded-lg text-sm border font-medium ${message.includes('successful') ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'}`}>
+                        {!message.includes('successful') && <AlertCircle className="w-4 h-4 shrink-0" />}
                         {message}
                     </div>
                 )}
                 
-                {/* Auth Form */}
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     {!isLogin && (
-                        <div className="space-y-1">
-                            <label className="text-xs font-medium text-zinc-400 ml-1">Full Name</label>
-                            <input 
-                                type="text" 
-                                value={name} 
-                                onChange={(e) => setName(e.target.value)} 
-                                required 
-                                className="w-full bg-[#09090b] border border-zinc-800 rounded-lg px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all"
-                                placeholder="John Doe"
-                            />
-                        </div>
+                        <>
+                            <div className="flex bg-[#09090b] p-1 rounded-xl border border-slate-800 mb-2">
+                                <button type="button" onClick={() => setAuthRole('user')} className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${authRole === 'user' ? 'bg-cyan-500/15 text-cyan-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}>
+                                    Developer
+                                </button>
+                                <button type="button" onClick={() => setAuthRole('admin')} className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${authRole === 'admin' ? 'bg-purple-500/15 text-purple-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}>
+                                    Admin Console
+                                </button>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
+                                <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full bg-[#09090b] border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500/50 transition-all" placeholder="John Doe" />
+                            </div>
+                        </>
                     )}
                     
-                    <div className="space-y-1">
-                        <label className="text-xs font-medium text-zinc-400 ml-1">Email Address</label>
-                        <input 
-                            type="email" 
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)} 
-                            required 
-                            className="w-full bg-[#09090b] border border-zinc-800 rounded-lg px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all"
-                            placeholder="name@example.com"
-                        />
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full bg-[#09090b] border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500/50 transition-all" placeholder="name@domain.com" />
                     </div>
 
-                    <div className="space-y-1">
-                        <label className="text-xs font-medium text-zinc-400 ml-1">Password</label>
-                        <input 
-                            type="password" 
-                            value={password} 
-                            onChange={(e) => setPassword(e.target.value)} 
-                            required 
-                            className="w-full bg-[#09090b] border border-zinc-800 rounded-lg px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all"
-                            placeholder="••••••••"
-                        />
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full bg-[#09090b] border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500/50 transition-all" placeholder="••••••••" />
                     </div>
 
-                    <button 
-                        type="submit" 
-                        disabled={isLoading}
-                        className="w-full mt-4 bg-zinc-100 hover:bg-white text-zinc-900 font-semibold py-3 rounded-lg text-sm transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                    >
-                        {isLoading ? (
-                            <>
-                                <svg className="animate-spin h-4 w-4 text-zinc-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Authenticating...
-                            </>
-                        ) : (isLogin ? 'Sign In' : 'Create Account')}
+                    <button type="submit" disabled={isLoading} className="w-full mt-6 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(6,182,212,0.2)] disabled:opacity-70">
+                        {isLoading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
                     </button>
                 </form>
             </div>

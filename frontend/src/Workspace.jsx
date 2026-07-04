@@ -5,7 +5,8 @@ import { Editor } from '@monaco-editor/react';
 import toast from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ChevronLeft, Code2, Sparkles, Terminal, Play, History, FileText, Sun, Moon, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, Code2, Sparkles, Terminal, Play, History, FileText, Sun, Moon, AlertTriangle, CheckCircle2, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function Workspace() {
     const { id } = useParams();
@@ -22,6 +23,8 @@ export default function Workspace() {
     const [activeTab, setActiveTab] = useState('description'); 
     const [history, setHistory] = useState([]);
     const [language, setLanguage] = useState('cpp');
+    
+    const [viewingCode, setViewingCode] = useState(null);
     
     const boilerplates = {
         cpp: "#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n    \n    return 0;\n}",
@@ -55,7 +58,7 @@ export default function Workspace() {
         setAiHint(null); 
         
         try {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const res = await axios.post('/api/submit', {
                 language: language,
                 problemId: id,
@@ -88,7 +91,7 @@ export default function Workspace() {
     const requestHint = async () => {
         setIsHintLoading(true);
         try {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const response = await axios.post('/api/submit/hint', {
                 problemId: id,
                 userCode: code,
@@ -111,7 +114,7 @@ export default function Workspace() {
 
     const fetchHistory = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             if (!token) return; 
             const res = await axios.get(`/api/submit/history/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -130,7 +133,7 @@ export default function Workspace() {
 
     if (!problem) return (
         <div className="h-screen bg-[#09090b] flex items-center justify-center gap-3">
-            <svg className="animate-spin h-6 w-6 text-violet-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-6 w-6 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -141,18 +144,35 @@ export default function Workspace() {
     return (
         <div className="h-screen bg-[#09090b] flex flex-col text-zinc-200 overflow-hidden font-sans">
             
+            {/* Modal for Viewing Previous Submissions */}
+            {viewingCode && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-[#0c0c0e] border border-zinc-800 rounded-2xl w-full max-w-3xl overflow-hidden flex flex-col shadow-2xl">
+                        <div className="flex justify-between items-center p-5 border-b border-zinc-800 bg-[#09090b]">
+                            <h3 className="font-bold text-white flex items-center gap-2">
+                                <Code2 className="w-5 h-5 text-cyan-400"/> Submission Snapshot
+                            </h3>
+                            <button onClick={() => setViewingCode(null)} className="p-1.5 text-zinc-400 hover:text-white bg-zinc-900 rounded-lg transition-colors"><X className="w-5 h-5"/></button>
+                        </div>
+                        <div className="p-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
+                            <pre className="bg-[#09090b] border border-zinc-800/60 p-5 rounded-xl font-mono text-sm text-cyan-400 whitespace-pre-wrap">{viewingCode}</pre>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
             {/* Top Minimal Workspace Navbar */}
             <header className="h-14 border-b border-zinc-800/80 bg-[#0c0c0e] px-4 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-4">
                     <button 
-                        onClick={() => navigate('/')}
+                        onClick={() => navigate(-1)}
                         className="p-1.5 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 transition-all"
                     >
                         <ChevronLeft className="w-4 h-4" />
                     </button>
                     <div className="h-4 w-px bg-zinc-800" />
                     <h1 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
-                        <Code2 className="w-4 h-4 text-violet-400" />
+                        <Code2 className="w-4 h-4 text-cyan-400" />
                         {problem.title}
                     </h1>
                 </div>
@@ -168,7 +188,7 @@ export default function Workspace() {
                     <select 
                         value={language} 
                         onChange={handleLanguageChange}
-                        className="bg-[#09090b] border border-zinc-800 rounded-lg px-3 py-1.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-violet-500/50 cursor-pointer"
+                        className="bg-[#09090b] border border-zinc-800 rounded-lg px-3 py-1.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-cyan-500/50 cursor-pointer"
                     >
                         <option value="cpp">C++ 17</option>
                         <option value="c">C Compiler</option>
@@ -183,25 +203,23 @@ export default function Workspace() {
                 
                 {/* LEFT PANEL: Context Description & Submissions */}
                 <div className="w-1/2 flex flex-col border-r border-zinc-800/80 bg-[#09090b]">
-                    {/* Panel Tabs Header */}
                     <div className="flex border-b border-zinc-800/80 bg-[#0c0c0e]/50 px-4 shrink-0">
                         <button 
                             onClick={() => setActiveTab('description')}
-                            className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold tracking-wide transition-all border-b-2 ${activeTab === 'description' ? 'text-violet-400 border-violet-500 bg-violet-500/[0.02]' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
+                            className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold tracking-wide transition-all border-b-2 ${activeTab === 'description' ? 'text-cyan-400 border-cyan-500 bg-cyan-500/[0.02]' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
                         >
                             <FileText className="w-3.5 h-3.5" />
                             Description
                         </button>
                         <button 
                             onClick={() => setActiveTab('submissions')}
-                            className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold tracking-wide transition-all border-b-2 ${activeTab === 'submissions' ? 'text-violet-400 border-violet-500 bg-violet-500/[0.02]' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
+                            className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold tracking-wide transition-all border-b-2 ${activeTab === 'submissions' ? 'text-cyan-400 border-cyan-500 bg-cyan-500/[0.02]' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
                         >
                             <History className="w-3.5 h-3.5" />
                             Submissions
                         </button>
                     </div>
 
-                    {/* Dynamic Left Panel Content Scroll Box */}
                     <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
                         {activeTab === 'description' && (
                             <div className="space-y-6">
@@ -224,7 +242,7 @@ export default function Workspace() {
                                         components={{
                                             code({node, inline, className, children, ...props}) {
                                                 return (
-                                                    <code className="bg-zinc-800/60 px-1.5 py-0.5 rounded font-mono text-xs text-violet-400 border border-zinc-700/40" {...props}>
+                                                    <code className="bg-zinc-800/60 px-1.5 py-0.5 rounded font-mono text-xs text-cyan-400 border border-zinc-700/40" {...props}>
                                                         {children}
                                                     </code>
                                                 )
@@ -246,7 +264,7 @@ export default function Workspace() {
                                     <div className="space-y-4 pt-4 border-t border-zinc-800/60">
                                         <h3 className="text-sm font-bold tracking-wider uppercase text-zinc-400">Example Walkthroughs</h3>
                                         {problem.examples.map((ex, index) => (
-                                            <div key={index} className="bg-[#0c0c0e] border border-zinc-800/80 rounded-xl p-4 font-mono text-xs space-y-1.5 border-l-2 border-l-violet-500/60">
+                                            <div key={index} className="bg-[#0c0c0e] border border-zinc-800/80 rounded-xl p-4 font-mono text-xs space-y-1.5 border-l-2 border-l-cyan-500/60">
                                                 <div className="text-zinc-400"><strong className="text-zinc-100 font-semibold">Input:</strong> {ex.input}</div>
                                                 <div className="text-zinc-400"><strong className="text-zinc-100 font-semibold">Output:</strong> {ex.output}</div>
                                                 {ex.explanation && (
@@ -272,6 +290,7 @@ export default function Workspace() {
                                                     <th className="p-4">Engine Status</th>
                                                     <th className="p-4">Language</th>
                                                     <th className="p-4 text-right">Timestamp</th>
+                                                    <th className="p-4 text-right">Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-zinc-800/60 font-medium">
@@ -283,6 +302,14 @@ export default function Workspace() {
                                                         <td className="p-4 text-zinc-400 font-mono">{sub.language}</td>
                                                         <td className="p-4 text-zinc-500 text-right font-mono">
                                                             {new Date(sub.createdAt).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="p-4 text-right">
+                                                            <button 
+                                                                onClick={() => setViewingCode(sub.code)}
+                                                                className="text-cyan-500 hover:text-cyan-400 font-bold transition-colors"
+                                                            >
+                                                                View Code
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -298,7 +325,6 @@ export default function Workspace() {
                 {/* RIGHT PANEL: MONACO WORKSPACE & LIVE VERDICT FEED */}
                 <div className="w-1/2 flex flex-col bg-[#0c0c0e]">
                     
-                    {/* Code Editor Interactive Workspace */}
                     <div className="flex-1 min-h-0 relative border-b border-zinc-800">
                         <Editor
                             height="100%"
@@ -316,12 +342,11 @@ export default function Workspace() {
                         />
                     </div>
 
-                    {/* Operational Console Panel */}
                     <div className="p-4 bg-[#09090b] space-y-4 shrink-0">
                         <button 
                             onClick={submitCode} 
                             disabled={isSubmitting}
-                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all text-white ${isSubmitting ? 'bg-zinc-800 cursor-not-allowed text-zinc-500' : 'bg-violet-600 hover:bg-violet-500 shadow-lg shadow-violet-600/10'}`}
+                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all text-white ${isSubmitting ? 'bg-zinc-800 cursor-not-allowed text-zinc-500' : 'bg-cyan-600 hover:bg-cyan-500 shadow-lg shadow-cyan-600/10'}`}
                         >
                             {isSubmitting ? (
                                 <>
@@ -339,7 +364,6 @@ export default function Workspace() {
                             )}
                         </button>
 
-                        {/* Engine Verdict Feed */}
                         {verdict && (
                             <div className={`rounded-xl border p-4 text-xs font-medium ${verdict.success ? 'bg-emerald-500/[0.02] border-emerald-500/20' : 'bg-rose-500/[0.02] border-rose-500/20'}`}>
                                 <div className="flex items-center gap-2 mb-2">
@@ -358,24 +382,22 @@ export default function Workspace() {
                                     </div>
                                 )}
 
-                                {/* AI MENTOR COMPONENT INTERACTION PANEL */}
                                 {failCount >= 2 && !aiHint && verdict.verdict === "Wrong Answer" && (
                                     <button 
                                         onClick={requestHint}
                                         disabled={isHintLoading}
-                                        className="w-full mt-4 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold bg-[#0c0c0e] hover:bg-zinc-900 border border-violet-500/30 text-violet-400 shadow-md transition-all duration-150"
+                                        className="w-full mt-4 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold bg-[#0c0c0e] hover:bg-zinc-900 border border-purple-500/30 text-purple-400 shadow-md transition-all duration-150"
                                     >
                                         <Sparkles className="w-3.5 h-3.5 animate-pulse" />
                                         {isHintLoading ? "Analyzing logical traces..." : "Consult Agentic Socratic Code Mentor"}
                                     </button>
                                 )}
 
-                                {/* Socratic AI Hint Output Widget */}
                                 {aiHint && (
-                                    <div className="mt-4 border border-violet-500/20 rounded-xl bg-gradient-to-b from-violet-950/20 to-transparent p-4 relative overflow-hidden shadow-inner shadow-violet-500/[0.02]">
+                                    <div className="mt-4 border border-purple-500/20 rounded-xl bg-gradient-to-b from-purple-950/20 to-transparent p-4 relative overflow-hidden shadow-inner shadow-purple-500/[0.02]">
                                         <div className="flex items-center gap-2 mb-2 border-b border-zinc-800 pb-2">
-                                            <Sparkles className="w-4 h-4 text-violet-400" />
-                                            <span className="font-bold text-violet-300 tracking-wide uppercase text-[10px]">Agentic Code Mentor</span>
+                                            <Sparkles className="w-4 h-4 text-purple-400" />
+                                            <span className="font-bold text-purple-300 tracking-wide uppercase text-[10px]">Agentic Code Mentor</span>
                                         </div>
                                         <p className="text-zinc-300 leading-relaxed font-mono text-[11px] whitespace-pre-wrap">{aiHint}</p>
                                     </div>
